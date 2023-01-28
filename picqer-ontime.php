@@ -9,7 +9,10 @@
  * @link        https://api.asx.be/?pag=distri&sub=create
  *
  * Usage:
- * $po = new picqer_ontime();
+ * $po = new \telartis\picqer_ontime\picqer_ontime();
+ * $po->auth_user = '';
+ * $po->auth_pw = '';
+ * $po->ontime = [];
  * $po->main();
  *
  * Functions:
@@ -36,6 +39,8 @@
  * hide_pass(string $text): string
  *
  */
+
+namespace telartis\picqer_ontime;
 
 class picqer_ontime
 {
