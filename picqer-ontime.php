@@ -90,8 +90,8 @@ class picqer_ontime
     public bool $is_test  = false;
     public array $data_in  = [];
     public array $data_out = [];
-    public array $json_in  = [];
-    public array $json_out = [];
+    public string $json_in  = '';
+    public string $json_out = '';
 
 
     /**
@@ -160,12 +160,13 @@ class picqer_ontime
 
         // Read raw data from the request body:
         $json = file_get_contents('php://input');
-        $this->data_in = json_decode($json, true);
+        $data_in = $json !== false ? json_decode($json, true) : false;
 
         $error = '';
-        if (!is_array($this->data_in)) {
-            $error = 'Input error! '.$this->dbg($this->data_in);
+        if (!is_array($data_in)) {
+            $error = 'Input error! '.$this->dbg($data_in);
         } else {
+            $this->data_in = $data_in;
             $response = $this->create($this->data_in);
             if (isset($response['error'])) {
                 $error = $response['error'];
@@ -232,13 +233,13 @@ class picqer_ontime
     public function create(array $data_in): array
     {
         $verzender = [
-            'contact'    => $this->trim($data_in['user']['firstname'].' '.$data_in['user']['lastname']),
+            'contact'    => $this->trim(($data_in['user']['firstname'] ?? '').' '.($data_in['user']['lastname'] ?? '')),
             'email'      => $this->trim($this->ontime['sender_emailaddress']),
-            'referentie' => $this->trim($data_in['reference']),
+            'referentie' => $this->trim($data_in['reference'] ?? ''),
             'tel'        => $this->format_telephone($this->ontime['sender_telephone']),
         ];
 
-        $ophalen = $this->contact(
+        $ophalen = $data_in ? $this->contact(
             $data_in['sender']['name'],
             $data_in['sender']['contactname'],
             $data_in['sender']['address'],
@@ -247,9 +248,9 @@ class picqer_ontime
             $data_in['sender']['city'],
             $data_in['sender']['country'],
             $this->ontime['sender_telephone']
-        );
+        ) : [];
 
-        $leveren = $this->contact(
+        $leveren = $data_in ? $this->contact(
             $data_in['picklist']['deliveryname'],
             $data_in['picklist']['deliverycontact'],
             $data_in['picklist']['deliveryaddress'],
@@ -258,14 +259,14 @@ class picqer_ontime
             $data_in['picklist']['deliverycity'],
             $data_in['picklist']['deliverycountry'],
             $data_in['picklist']['telephone']
-        );
-        $leveren['track_email'] = $this->trim($data_in['picklist']['emailaddress']);
+        ) : [];
+        $leveren['track_email'] = $this->trim($data_in['picklist']['emailaddress'] ?? '');
 
         $goederen = [];
         $goederen[] = ['goed' => [
-            'product' => $this->product_name($data_in['weight']),
+            'product' => $this->product_name((int) ($data_in['weight'] ?? 0)),
             'aantal'  => 1,
-            'gewicht' => $data_in['weight'] / 1000,
+            'gewicht' => ($data_in['weight'] ?? 0) / 1000,
         ]];
 
         $this->data_out = array_merge($this->verwerking('CREATE'), [
@@ -346,14 +347,15 @@ class picqer_ontime
         );
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
 
-        $this->json_in = json_encode($data, JSON_PRETTY_PRINT);
-        if ($this->json_in === false) {
-            // json_input error
+        $json_in = json_encode($data, JSON_PRETTY_PRINT);
+        if (!is_string($json_in)) {
             $error = 'ERROR JSON input! '.json_last_error_msg().
                 "\n\n".$this->dbg($data);
         } else {
+            $this->json_in = $json_in;
             curl_setopt($ch, CURLOPT_POSTFIELDS, $this->json_in);
-            $this->json_out = curl_exec($ch);
+            $json_out = curl_exec($ch);
+            $this->json_out = is_string($json_out) ? $json_out : '';
             $info = (object) curl_getinfo($ch);
             $this->http_code = (int) $info->http_code;
             if ($this->json_out === false) {
@@ -483,7 +485,9 @@ class picqer_ontime
      */
     public function basic_http_auth(): array
     {
-        if (($_SERVER['PHP_AUTH_USER'] == $this->auth_user) && ($_SERVER['PHP_AUTH_PW'] == $this->auth_pw)) {
+        $auth_user = $_SERVER['PHP_AUTH_USER'] ?? '';
+        $auth_pw   = $_SERVER['PHP_AUTH_PW']   ?? '';
+        if (($auth_user == $this->auth_user) && ($auth_pw == $this->auth_pw)) {
 
             return [];
         } else {
