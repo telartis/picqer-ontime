@@ -35,7 +35,7 @@
  * format_country(string $country): string
  * format_telephone(string $tel): string
  * product_name(int $grams): string
- * trim($value): string
+ * trim(?string $value): string
  * hide_pass(string $text): string
  *
  */
