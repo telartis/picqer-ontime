@@ -7,4 +7,4 @@ The functionality is secured with a username and password and authenticated with
 - Picqer, online warehouse management software for webshops: https://picqer.com/en
 - Custom Shipping Method: https://picqer.com/en/api/custom-shippingmethod
 - ON TIME Logistics: https://ontime.be/
-- JSON Push shipping provider: https://api.asx.be/?pag=distri&sub=create
+- JSON Push shipping provider: https://data.ontime.be/?fldr=api&pag=distri&sub=create
