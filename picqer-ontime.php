@@ -6,7 +6,7 @@
  * @author    Jeroen de Jong <jeroen@telartis.nl>
  * @copyright 2022 Telartis BV
  * @link      https://picqer.com/en/api/custom-shippingmethod
- * @link      https://api.asx.be/?pag=distri&sub=create
+ * @link      https://data.ontime.be/?fldr=api&pag=distri&sub=create
  *
  * Usage:
  * $po = new \telartis\picqer_ontime\picqer_ontime();
