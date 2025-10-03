@@ -1,18 +1,18 @@
 <?php declare(strict_types=1);
 
 /**
- * Project:     On-Time Shipping Method for Picqer
- * File:        picqer-ontime.php [test=false|true] [method=process|producten|landen]
- * @author      Jeroen de Jong <jeroen@telartis.nl>
- * @copyright   2022 Telartis BV
- * @link        https://picqer.com/en/api/custom-shippingmethod
- * @link        https://api.asx.be/?pag=distri&sub=create
+ * Project:   On-Time Shipping Method for Picqer
+ * File:      picqer-ontime.php [test=false|true] [method=process|producten|landen]
+ * @author    Jeroen de Jong <jeroen@telartis.nl>
+ * @copyright 2022 Telartis BV
+ * @link      https://picqer.com/en/api/custom-shippingmethod
+ * @link      https://api.asx.be/?pag=distri&sub=create
  *
  * Usage:
  * $po = new \telartis\picqer_ontime\picqer_ontime();
  * $po->auth_user = '';
  * $po->auth_pw = '';
- * $po->ontime = [];
+ * $po->ontime = [...];
  * $po->main();
  *
  * Functions:
@@ -44,13 +44,29 @@ namespace telartis\picqer_ontime;
 
 class picqer_ontime
 {
-    public $auth_user = '';
-    public $auth_pw   = '';
+    public string $auth_user = '';
+    public string $auth_pw   = '';
 
-    public $log_file = '/var/log/picqer-ontime.log'; // leave empty if you do not want logging
-    // quick read logfile: egrep ^[0-9]{4}- /var/log/picqer-ontime.log
+    public string $log_file = '/var/log/picqer-ontime.log'; // leave empty if you do not want logging
 
-    public $ontime = [
+    /*
+
+    quick read logfile: egrep ^[0-9]{4}- /var/log/picqer-ontime.log
+
+    sudo vim /etc/logrotate.d/picqer-ontime
+    /var/log/picqer-ontime.log {
+        monthly
+        dateext
+        dateformat -%Y-%m
+        dateyesterday
+        create 0664 www-data www-data
+        rotate 24
+        compress
+    }
+
+    */
+
+    public array $ontime = [
         'apiurl'    => 'https://api.asx.be/DISTRI/',
         'gebruiker' => 'user@example.com',
         'klantnr'   => '12345',
@@ -64,18 +80,18 @@ class picqer_ontime
         ],
     ];
 
-    public $http_code = 200; // OK
+    public int $http_code = 200; // OK
 
-    public $http_headers = [
+    public array $http_headers = [
         'Cache-Control: no-cache',
         'Content-type: application/json',
     ];
 
-    public $is_test  = false;
-    public $data_in  = [];
-    public $data_out = [];
-    public $json_in  = [];
-    public $json_out = [];
+    public bool $is_test  = false;
+    public array $data_in  = [];
+    public array $data_out = [];
+    public array $json_in  = [];
+    public array $json_out = [];
 
 
     /**
@@ -86,7 +102,7 @@ class picqer_ontime
     public function main(): void
     {
         $is_test = (bool)   filter_input(INPUT_GET, 'test',   FILTER_VALIDATE_BOOLEAN);
-        $method  = (string) filter_input(INPUT_GET, 'method', FILTER_SANITIZE_STRING);
+        $method  = (string) filter_input(INPUT_GET, 'method', FILTER_DEFAULT, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH | FILTER_FLAG_STRIP_BACKTICK);
 
         if (!in_array($method, ['process', 'producten', 'landen'])) {
             $method = 'process';
@@ -154,22 +170,22 @@ class picqer_ontime
             if (isset($response['error'])) {
                 $error = $response['error'];
             } else {
-                $count = count($response['opdrachten']);
+                $count = isset($response['opdrachten']) ? count($response['opdrachten']) : 0;
                 if ($count != 1) {
-                    $error = "Error $count orders found!\n".$response['remarks'];
+                    $error = "Error $count orders found!\n".(isset($response['remarks']) ? $response['remarks'] : '');
                 } else {
                     $opdracht = $response['opdrachten'][0];
 
-                    $identifier  = $opdracht['nummer']; // xxx
-                    $trackingurl = $opdracht['track'];  // https://track.asx.be/xxx
-                    $labelurl    = $opdracht['label'];  // https://portal.asx.be/pdf/bestelling/?etiket=DSTRAPIxxx
+                    $identifier  = isset($opdracht['nummer']) ? (string) $opdracht['nummer'] : '';  // xxx
+                    $trackingurl = isset($opdracht['track'])  ? (string) $opdracht['track']  : '';  // https://track.asx.be/xxx
+                    $labelurl    = isset($opdracht['label'])  ? (string) $opdracht['label']  : '';  // https://portal.asx.be/pdf/bestelling/?etiket=DSTRAPIxxx
 
-                    $label_contents_pdf = base64_encode(file_get_contents($labelurl));
+                    $label_contents_pdf = base64_encode((string) file_get_contents($labelurl));
 
                     $response = [
-                        'identifier'         => $identifier,  // Shipper's trackingcode
-                        'trackingurl'        => $trackingurl, // URL of track and trace page
-                        'carrier_key'        => 'ontime', // Key of the carrier, so Picqer can show the right logo
+                        'identifier'         => $identifier,         // Shipper's trackingcode
+                        'trackingurl'        => $trackingurl,        // URL of track and trace page
+                        'carrier_key'        => 'ontime',            // Key of the carrier, so Picqer can show the right logo
                         'label_contents_pdf' => $label_contents_pdf, // Base64 encoded PDF document of label
                     ];
                 }
@@ -305,8 +321,8 @@ class picqer_ontime
             'adres2'   => $this->trim($address2),
             'postcode' => $this->trim($zipcode),
             'gemeente' => $this->trim($city),
-            'land    ' => $this->format_country($country),
-            'tel'      => $this->format_telephone($tel),
+            'land    ' => $this->format_country($this->trim($country)),
+            'tel'      => $this->format_telephone($this->trim($tel)),
         ];
     }
 
@@ -463,7 +479,7 @@ class picqer_ontime
     /**
      * HTTP Basic authentication
      *
-     * @return array
+     * @return array  - Empty array on Success and [error => 'message'] on Failure
      */
     public function basic_http_auth(): array
     {
@@ -539,9 +555,8 @@ class picqer_ontime
         // remove spaces at end of lines
         $string = preg_replace('/ +$/m', '', $string);
 
-        // remove multiple line feeds
-        $string = preg_replace('/\n{3,}/', "\n\n", $string);
-        $string = preg_replace('/\n{3,}/', "\n\n", $string);
+        // replace three or more line feeds with just two line feeds
+        $string = preg_replace('/\n{3,}/', "\n\n", str_replace("\r", "", $string));
 
         return trim($string);
     }
