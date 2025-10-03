@@ -22,16 +22,16 @@
  * landen(): array
  * create(array $data_in): array
  * verwerking(string $name): array
- * contact($name, $contact, $address, $address2, $zipcode, $city, $country, $tel): array
+ * contact(?string $name, ?string $contact, ?string $address, ?string $address2, ?string $zipcode, ?string $city, ?string $country, ?string $tel): array
  * query(array $data, string $result_key): array
  * remarks(array $result): string
  * error(string $error): array
- * dbg($data, string $name = ''): string
+ * dbg(mixed $data, string $name = ''): string
  * basic_http_auth(): array
  * output(array $response): void
  * json_encode(array $data, int $flags = JSON_PRETTY_PRINT): string
  * clean_html(string $html): string
- * split_address($address): array
+ * split_address(?string $address): array
  * format_country(string $country): string
  * format_telephone(string $tel): string
  * product_name(int $grams): string
@@ -299,17 +299,17 @@ class picqer_ontime
     /**
      * Get On-Time contact array
      *
-     * @param  mixed    $name
-     * @param  mixed    $contact
-     * @param  mixed    $address
-     * @param  mixed    $address2
-     * @param  mixed    $zipcode
-     * @param  mixed    $city
-     * @param  mixed    $country
-     * @param  mixed    $tel
+     * @param  ?string  $name
+     * @param  ?string  $contact
+     * @param  ?string  $address
+     * @param  ?string  $address2
+     * @param  ?string  $zipcode
+     * @param  ?string  $city
+     * @param  ?string  $country
+     * @param  ?string  $tel
      * @return array
      */
-    public function contact($name, $contact, $address, $address2, $zipcode, $city, $country, $tel): array
+    public function contact(?string $name, ?string $contact, ?string $address, ?string $address2, ?string $zipcode, ?string $city, ?string $country, ?string $tel): array
     {
         [$street, $number] = $this->split_address($address);
 
@@ -463,7 +463,7 @@ class picqer_ontime
      * @param  string   $name  Name of variable
      * @return string
      */
-    public function dbg($data, string $name = ''): string
+    public function dbg(mixed $data, string $name = ''): string
     {
         ob_start();
         var_dump($data);
@@ -564,10 +564,10 @@ class picqer_ontime
     /**
      * Split address into street and number parts
      *
-     * @param  mixed    $address        'Kattendijkdok 5A', '5A, Kattendijkdok'
+     * @param  ?string  $address        'Kattendijkdok 5A', '5A, Kattendijkdok'
      * @return array($street, $number)  ['Kattendijkdok', '5A']
      */
-    public function split_address($address): array
+    public function split_address(?string $address): array
     {
         $street = $this->trim($address);
         $number = '';
@@ -643,10 +643,10 @@ class picqer_ontime
     /**
      * Trim and remove NULL values
      *
-     * @param  mixed    $value
+     * @param  ?string  $value
      * @return string
      */
-    public function trim($value): string
+    public function trim(?string $value): string
     {
         return is_null($value) ? '' : trim($value);
     }
