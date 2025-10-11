@@ -47,12 +47,14 @@ class picqer_ontime
     public string $auth_user = '';
     public string $auth_pw   = '';
 
-    public string $log_file = '/var/log/picqer-ontime.log'; // leave empty if you do not want logging
+    public string $log_file = '/var/log/picqer-ontime.log'; // Leave empty to turn off logging
 
     /*
 
-    quick read logfile: egrep ^[0-9]{4}- /var/log/picqer-ontime.log
+    Quick Logfile Read Command:
+    egrep ^[0-9]{4}- /var/log/picqer-ontime.log
 
+    Set Up Logrotate:
     sudo vim /etc/logrotate.d/picqer-ontime
     /var/log/picqer-ontime.log {
         monthly
@@ -123,7 +125,7 @@ class picqer_ontime
         if (isset($response['error'])) {
             $response['error'] = $response['error']."\n\n".$debug;
             $details = $response['error'];
-            $message = substr($details, 0, strpos($details, "\n")); // only get first line of error message
+            $message = substr($details, 0, strpos($details, "\n")); // Retrieve only the first line of the error message
         } else {
             $details = $this->dbg($response, 'response')."\n\n".$debug;
             $message = $response['identifier'];
@@ -146,7 +148,7 @@ class picqer_ontime
     }
 
     /**
-     * Get Picqer data and process the data
+     * Fetches Picqer data and processes it
      *
      * @return array
      */
@@ -281,7 +283,7 @@ class picqer_ontime
     }
 
     /**
-     * Get On-Time verwerking array
+     * Get On-Time processing-array
      *
      * @param  string   $name
      * @return array
@@ -298,7 +300,7 @@ class picqer_ontime
     }
 
     /**
-     * Get On-Time contact array
+     * Get On-Time contact-array
      *
      * @param  ?string  $name
      * @param  ?string  $contact
@@ -419,7 +421,7 @@ class picqer_ontime
     }
 
     /**
-     * Get remarks from On-Time result array
+     * Get remarks from On-Time result-array
      *
      * @param  array    $result
      * @return string
@@ -459,7 +461,7 @@ class picqer_ontime
     }
 
     /**
-     * Debug Variable
+     * Return debug-information about a variable as a string
      *
      * @param  mixed    $data  Variable to output in debug string
      * @param  string   $name  Name of variable
@@ -481,7 +483,7 @@ class picqer_ontime
     /**
      * HTTP Basic authentication
      *
-     * @return array  - Empty array on Success and [error => 'message'] on Failure
+     * @return array  Empty array on Success and [error => 'message'] on Failure
      */
     public function basic_http_auth(): array
     {
